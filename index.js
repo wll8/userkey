@@ -165,7 +165,7 @@ function parseArgv(arr) {
  */
 function deepGet(object, keys = [], defaultValue) {
   let res = (!Array.isArray(keys)
-    ? keys
+    ? String(keys)
       .replace(/\[/g, `.`)
       .replace(/\]/g, ``)
       .split(`.`)
@@ -182,7 +182,7 @@ function deepGet(object, keys = [], defaultValue) {
  * @returns 
  */
 function deepSet(object, keys, val) {
-  keys = Array.isArray(keys) ? keys : keys
+  keys = Array.isArray(keys) ? keys : String(keys)
     .replace(/\[/g, `.`)
     .replace(/\]/g, ``)
     .split(`.`)
