@@ -11,7 +11,6 @@ const {
   enSign,
   deSign,
 } = require(`./util.js`)
-const storePath = `${os.homedir}/.userkey/store.json`
 
 if (require.main === module) { // 通过 cli 使用
   const {
@@ -24,7 +23,7 @@ if (require.main === module) { // 通过 cli 使用
     val,
   } = parseArgv()
   try {
-    const storeData = store({select, storePath, pw})
+    const storeData = store({select, pw})
     if(encrypt) {
       storeData.encrypt()
       process.exit()
@@ -49,13 +48,14 @@ if (require.main === module) { // 通过 cli 使用
   }
 } 
 
-module.exports = ({pw = ``} = {}) => {
-  const storeData = store({storePath, pw})
-  return storeData
-}
+module.exports = store
 
-function store({select, storePath, pw: rawPw}) {
+function store({select = ``, pw: rawPw} = {}) {
+  if(!(typeof(select) === `string` && (/^[A-Za-z0-9]+$/.test(select) || select === ``))) {
+    throw new Error(`The select parameter allows only letters and numbers`)
+  }
   pw = md5(String(rawPw))
+  const storePath = `${os.homedir}/.userkey/store${select ? `.${select}` : select}.json`
   if(!(fs.existsSync(storePath) && Boolean(fs.readFileSync(storePath, `utf8`)))) {
     const dir = path.parse(storePath).dir
     fs.existsSync(dir) === false && fs.mkdirSync(dir, {recursive: true});
@@ -74,6 +74,7 @@ function store({select, storePath, pw: rawPw}) {
     throw new Error(`Incorrect data verification`)
   }
   return {
+    storePath,
     file,
     // 获取数据
     get(key, defaultVal) {
