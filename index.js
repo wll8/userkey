@@ -49,7 +49,6 @@ if (require.main === module) { // 通过 cli 使用
       `  # decrypt storage space`,
       `  ${pkg.name} select=ace pw=admin decrypt`,
     ].join(`\n`))
-    process.exit()
   }
   try {
     const storeData = store({select, pw})
@@ -66,12 +65,11 @@ if (require.main === module) { // 通过 cli 使用
       const action = val === undefined ? `get` : `set`
       const res = storeData[action](key, val)
       console.info(res)
-      process.exit()
     }
   } catch (error) {
     console.info(error)
-    process.exit()
   }
+  process.exit()
 } 
 
 module.exports = store
