@@ -3,6 +3,7 @@
 const fs = require(`fs`)
 const path = require(`path`)
 const os = require(`os`)
+const pkg = require(`./package.json`)
 const {
   md5,
   parseArgv,
@@ -22,24 +23,49 @@ if (require.main === module) { // 通过 cli 使用
     key,
     val,
   } = parseArgv()
+  const [arg1] = process.argv.slice(2)
+  if([undefined, `--help`, `-h`].includes(arg1)) {
+    console.info([
+      `${pkg.name} v${pkg.version} ${pkg.homepage}`,
+      ``,
+      `usage:`,
+      `  select    --[string ] Choose a storage container`,
+      `  encrypt   --[boolean] encrypted storage container`,
+      `  decrypt   --[boolean] Decrypt the storage container`,
+      `  pw        --[string ] password for storage`,
+      `  newpw     --[string ] change Password`,
+      `  key       --[string ] Provide key to query data`,
+      `  val       --[string ] provide val setting data`,
+      ``,
+      `eg:`,
+      `  # Save information and query information`,
+      `  ${pkg.name} key=vps.local val=aaa`,
+      `  ${pkg.name} key=vps.local`,
+      ``,
+      `  # Use another storage space and use a password to save and query information`,
+      `  ${pkg.name} select=ace pw=admin key=birthday val=1990.01.01 encrypt`,
+      `  ${pkg.name} select=ace pw=admin key=birthday`,
+      ``,
+      `  # decrypt storage space`,
+      `  ${pkg.name} select=ace pw=admin decrypt`,
+    ].join(`\n`))
+    process.exit()
+  }
   try {
     const storeData = store({select, pw})
     if(encrypt) {
       storeData.encrypt()
-      process.exit()
     }
     if(decrypt) {
       storeData.decrypt()
-      process.exit()
     }
     if(newpw) {
       storeData.newpw()
-      process.exit()
     }
     if(key) {
       const action = val === undefined ? `get` : `set`
       const res = storeData[action](key, val)
-      console.info({storePath, action, key, res, val})
+      console.info(res)
       process.exit()
     }
   } catch (error) {
@@ -55,13 +81,14 @@ function store({select = ``, pw: rawPw} = {}) {
     throw new Error(`The select parameter allows only letters and numbers`)
   }
   pw = md5(String(rawPw))
-  const storePath = `${os.homedir}/.userkey/store${select ? `.${select}` : select}.json`
+  const storePath = `${os.homedir}/.userkey/store${select ? `.${select}` : select}.json`.replace(/[\\/]/g, `/`)
+  console.info(`storePath:`, storePath)
   if(!(fs.existsSync(storePath) && Boolean(fs.readFileSync(storePath, `utf8`)))) {
     const dir = path.parse(storePath).dir
     fs.existsSync(dir) === false && fs.mkdirSync(dir, {recursive: true});
     fs.writeFileSync(storePath, JSON.stringify({
       data: {},
-    }))
+    }, null, 2))
   }
   let file = JSON.parse(fs.readFileSync(storePath))
   file.decryptData = file.data
@@ -84,6 +111,7 @@ function store({select = ``, pw: rawPw} = {}) {
     set(key, val) {
       deepSet(file.decryptData, key, val)
       setData({storePath, file, pw})
+      return deepGet(file.decryptData, key)
     },
     // 加密数据, 加密之后数据以密文存储
     encrypt() {
@@ -91,7 +119,7 @@ function store({select = ``, pw: rawPw} = {}) {
         throw new Error(`encrypted before`)
       }
       if(Boolean(rawPw) === false) {
-        throw new Error(`password can not be blank`)
+        throw new Error(`password is a required parameter`)
       }
       file.isPw = true
       setData({storePath, file, pw})
@@ -105,7 +133,7 @@ function store({select = ``, pw: rawPw} = {}) {
       setData({storePath, file, pw})
     },
     // 修改密码
-    newpw(oldPw, newPw) {
+    newpw(newPw) {
       
     },
   }

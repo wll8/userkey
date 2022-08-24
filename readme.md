@@ -17,20 +17,77 @@ Command Line:
 # install
 npm i -g userkey
 
-# set data
-userkey key=vpsList.vps1.password val=123456
+# help
+userkey --help
 
-# get data
-userkey key=vpsList.vps1
+# Save information and query information
+userkey key=vps.local val=aaa
+userkey key=vps.local
+
+# Use another storage space and use a password to save and query information
+userkey select=ace pw=admin key=birthday val=1990.01.01 encrypt
+userkey select=ace pw=admin key=birthday
+
+# decrypt storage space
+userkey select=ace pw=admin decrypt
 ```
 
 by code:
 ``` js
-const storeData = require(`userkey`)()
+const userkey = require(`userkey`)
+
+const storeData = userkey({
+  select: `work`,
+  pw: `123456`,
+})
+
+// encryption
+storeData.file.isPw === false && storeData.encrypt()
 
 // set data (this method is not recommended, avoid forgetting to delete from the code)
-storeData.set(`vpsList.vps1.password`, `123456`)
+storeData.set(`vps.local`, `aaa`)
 
 // get data
-storeData.get(`vpsList.vps1`)
+const data = storeData.get(`vps.local`)
+console.log(data)
+
 ```
+
+## Options
+``` js
+userkey({
+  // The name of the storage space to use, consisting of letters and numbers
+  select: ``,
+  // Manipulate Storage Spaces with Passwords
+  pw: ``,
+})
+```
+
+## Api
+- .storePath  
+  The file path used by the current storage space.
+
+- .file  
+  The contents of the file in the current storage space.
+
+- .get(key)  
+  for fetching data.
+
+  - key -- Path ID when storing.
+
+- .set(key, val)  
+  Used to store data.
+
+  - key -- Path ID when storing.
+  - val -- stored data.
+
+- .encrypt()  
+  Encrypt data, after encryption, the data is stored in ciphertext.
+
+- .decrypt()  
+  Decrypt the data, after decryption the data is stored in plaintext.
+
+- .newpw(newPw)  
+  change Password.
+
+  - newPw -- new password.

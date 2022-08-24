@@ -1,11 +1,12 @@
 {
   "name": "userkey",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "index.js",
   "bin": {
     "userkey": "./index.js"
   },
+  "homepage": "https://github.com/wll8/userkey",
   "repository": {
     "type": "git",
     "url": "git://github.com/wll8/userkey.git"

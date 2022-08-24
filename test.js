@@ -1,9 +1,16 @@
-const storeData = require(`./index.js`)()
-storeData.set(`vpsList.vps1`, {
-  host: `192.168.13.11`,
-  port: 22,
-  name: `ace`,
-  password: `123456`,
+const userkey = require(`./index.js`)
+
+const storeData = userkey({
+  select: `work`,
+  pw: `123456`,
 })
-const data = storeData.get(`vpsList.vps1`)
-console.log(`data`, data)
+
+// encryption
+storeData.file.isPw === false && storeData.encrypt()
+
+// set data (this method is not recommended, avoid forgetting to delete from the code)
+storeData.set(`vps.local`, `aaa`)
+
+// get data
+const data = storeData.get(`vps.local`)
+console.log(data)
