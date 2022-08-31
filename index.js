@@ -49,6 +49,7 @@ if (require.main === module) { // 通过 cli 使用
       `  # decrypt storage space`,
       `  ${pkg.name} select=ace pw=admin decrypt`,
     ].join(`\n`))
+    process.exit()
   }
   try {
     const storeData = store({select, pw})
