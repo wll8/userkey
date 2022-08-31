@@ -24,6 +24,12 @@ userkey --help
 userkey key=vps.local val=aaa
 userkey key=vps.local
 
+# Show all data in default storage space
+userkey
+
+# List all storage spaces
+userkey select
+
 # Use another storage space and use a password to save and query information
 userkey select=ace pw=admin key=birthday val=1990.01.01 encrypt
 userkey select=ace pw=admin key=birthday

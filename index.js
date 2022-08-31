@@ -4,6 +4,7 @@ const fs = require(`fs`)
 const path = require(`path`)
 const os = require(`os`)
 const pkg = require(`./package.json`)
+const dataDir = `${os.homedir}/.userkey`.replace(/[\\/]/g, `/`)
 const {
   md5,
   parseArgv,
@@ -24,7 +25,7 @@ if (require.main === module) { // 通过 cli 使用
     val,
   } = parseArgv()
   const [arg1] = process.argv.slice(2)
-  if([undefined, `--help`, `-h`].includes(arg1)) {
+  if([`--help`, `-h`].includes(arg1)) {
     console.info([
       `${pkg.name} v${pkg.version} ${pkg.homepage}`,
       ``,
@@ -42,6 +43,12 @@ if (require.main === module) { // 通过 cli 使用
       `  ${pkg.name} key=vps.local val=aaa`,
       `  ${pkg.name} key=vps.local`,
       ``,
+      `  # Show all data in default storage space`,
+      `  ${pkg.name}`,
+      ``,
+      `  # List all storage spaces`,
+      `  ${pkg.name} select`,
+      ``,
       `  # Use another storage space and use a password to save and query information`,
       `  ${pkg.name} select=ace pw=admin key=birthday val=1990.01.01 encrypt`,
       `  ${pkg.name} select=ace pw=admin key=birthday`,
@@ -52,6 +59,11 @@ if (require.main === module) { // 通过 cli 使用
     process.exit()
   }
   try {
+    if(select === true) {
+      const list = fs.readdirSync(dataDir).map(item => `${dataDir}/${item}`)
+      console.info(list)
+      process.exit()
+    }
     const storeData = store({select, pw})
     if(encrypt) {
       storeData.encrypt()
@@ -62,7 +74,7 @@ if (require.main === module) { // 通过 cli 使用
     if(newpw) {
       storeData.newpw()
     }
-    if(key) {
+    if(select !== true) {
       const action = val === undefined ? `get` : `set`
       const res = storeData[action](key, val)
       console.info(res)
@@ -80,7 +92,7 @@ function store({select = ``, pw: rawPw} = {}) {
     throw new Error(`The select parameter allows only letters and numbers`)
   }
   pw = md5(String(rawPw))
-  const storePath = `${os.homedir}/.userkey/store${select ? `.${select}` : select}.json`.replace(/[\\/]/g, `/`)
+  const storePath = `${dataDir}/store${select ? `.${select}` : select}.json`
   console.info(`storePath:`, storePath)
   if(!(fs.existsSync(storePath) && Boolean(fs.readFileSync(storePath, `utf8`)))) {
     const dir = path.parse(storePath).dir
@@ -104,7 +116,7 @@ function store({select = ``, pw: rawPw} = {}) {
     file,
     // 获取数据
     get(key, defaultVal) {
-      return deepGet(file.decryptData, key, defaultVal)
+      return key === undefined ? file.decryptData : deepGet(file.decryptData, key, defaultVal)
     },
     // 设置数据
     set(key, val) {
